@@ -1,0 +1,18 @@
+{
+  "_readme": [
+    "名称对齐 mapping 示例 —— 不含任何真实料号或测试项命名。",
+    "",
+    "作用：PE 规格里的测试项名与程序里的 test_item 常常对不上（缩写、分隔符、",
+    "大小写差异）。自动匹配失败时，由人工在 GUI 里确认一次，工具把这条决策",
+    "按 mapping_<程序ID>.json 持久化，后续同项目直接复用。",
+    "",
+    "格式：",
+    "  key   = PE 侧测试项名（经 norm() 归一化：去空格、转小写）",
+    "  value = \"<function>|<test_item>\"（程序侧唯一键）",
+    "",
+    "真实文件由工具自动生成，不入库（见 .gitignore）：config/mapping_*.json。",
+    "本示例文件仅用于说明结构，可直接复制改名后手工填写。"
+  ],
+  "example_pe_item_name": "Analog_Func|EXAMPLE_TEST_ITEM_0P5V",
+  "another_pe_item_name": "Digital_Func|ANOTHER_EXAMPLE_ITEM"
+}

@@ -1,0 +1,120 @@
+/* ==========================================================================
+   Limit Compare · Design Tokens
+   效率型桌面工具 ｜ 桌面优先 ｜ 信息密度可切换
+   文档为单一事实来源：代码中的颜色/间距一律取自本文件，不得硬编码。
+   ========================================================================== */
+
+:root {
+  /* ---- 语义色：PASS / FAIL / WARN / INFO --------------------------------
+     行业约定：芯片测试语义为 PASS 绿 / FAIL 红（与金融红涨绿跌相反）。
+     强约束：语义不得仅靠颜色传达，必须同时携带文字标签或形状标识。 */
+  --lc-pass: #639922;
+  --lc-pass-bg: #eaf3de;
+  --lc-fail: #a32d2d;
+  --lc-fail-bg: #fcebeb;
+  --lc-warn: #ba7517;
+  --lc-warn-bg: #faeeda;
+  --lc-info: #378add;
+  --lc-info-bg: #e6f1fb;
+  --lc-neutral: #888780;
+  --lc-neutral-bg: #f1efe8;
+
+  /* 判定配色映射（FV-1 覆盖 / FV-4 方向 / FV-6 Cpk / FV-5 GU 共用） */
+  --lc-verdict-covered: var(--lc-pass);      /* 覆盖 / 合理 / GU 更紧 */
+  --lc-verdict-uncovered: var(--lc-fail);    /* 未覆盖 / 过紧 / GU 失效 */
+  --lc-verdict-missing: var(--lc-neutral);   /* 缺失 / 无限值 / 数据不足 */
+  --lc-verdict-error: var(--lc-fail);        /* 数据异常（区间反向） */
+  --lc-verdict-loose: var(--lc-warn);        /* 过松 */
+  --lc-verdict-offcentre: #d85a30;           /* 偏心 */
+  --lc-verdict-mixed: #e24b4a;               /* 混合变动 */
+
+  /* ---- 中性界面色 ------------------------------------------------------- */
+  --lc-bg: #ffffff;
+  --lc-surface: #f7f7f5;
+  --lc-border: rgba(0, 0, 0, 0.15);
+  --lc-border-strong: rgba(0, 0, 0, 0.3);
+  --lc-text: #2c2c2a;
+  --lc-text-muted: #5f5e5a;
+  --lc-text-hint: #888780;
+
+  /* ---- 交互态：hover / 主按钮 / 选中 / 斑马纹 ---------------------------
+     Qt 样式表同样从这些令牌生成，避免界面硬编码颜色。 */
+  --lc-surface-hover: #ececea;
+  --lc-surface-pressed: #e2e2df;
+  --lc-accent: var(--lc-info);
+  --lc-accent-hover: #2f7ac4;
+  --lc-accent-text: #ffffff;
+  --lc-selection-bg: #dbe9f7;
+  --lc-row-alt: #fbfbf9;
+  --lc-input-bg: #ffffff;
+
+  /* ---- 排版：桌面优先，最小 12px --------------------------------------- */
+  --lc-font-sans: "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+  --lc-font-mono: "Cascadia Mono", Consolas, monospace;
+  --lc-fs-title: 15px;
+  --lc-fs-body: 13px;
+  --lc-fs-caption: 12px;
+  --lc-fs-metric: 24px;
+  --lc-lh-body: 1.6;
+
+  /* ---- 信息密度：Comfortable（默认） ------------------------------------ */
+  --lc-density-row-height: 28px;
+  --lc-density-cell-padding: 6px 8px;
+  --lc-density-gap: 12px;
+
+  /* ---- 圆角与边框 ------------------------------------------------------- */
+  --lc-radius-md: 8px;
+  --lc-radius-lg: 12px;
+  --lc-border-width: 0.5px;
+
+  /* ---- 数值列：等宽对齐，便于工程师比对 -------------------------------- */
+  --lc-numeric-font: var(--lc-font-mono);
+  --lc-numeric-align: right;
+}
+
+/* ---- 信息密度：Compact（工程师批量核对时用） ---------------------------- */
+:root[data-density="compact"] {
+  --lc-density-row-height: 22px;
+  --lc-density-cell-padding: 3px 6px;
+  --lc-density-gap: 8px;
+  --lc-fs-body: 12px;
+}
+
+/* ---- 语义标识：颜色之外必须有的形状/文字载体 --------------------------- */
+.lc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: var(--lc-radius-md);
+  font-size: var(--lc-fs-caption);
+  line-height: 1.6;
+}
+.lc-badge::before {
+  /* 形状标识：色盲/黑白打印下仍可区分 */
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.lc-badge--pass { color: var(--lc-pass); background: var(--lc-pass-bg); }
+.lc-badge--fail { color: var(--lc-fail); background: var(--lc-fail-bg); }
+.lc-badge--warn { color: var(--lc-warn); background: var(--lc-warn-bg); }
+.lc-badge--info { color: var(--lc-info); background: var(--lc-info-bg); }
+
+/* 判定文字必须与颜色同时出现，例如：● 未覆盖 / ● 覆盖 */
+.lc-verdict-text { font-size: var(--lc-fs-body); }
+
+/* ---- 结构 --------------------------------------------------------------- */
+.lc-panel {
+  background: var(--lc-bg);
+  border: var(--lc-border-width) solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+}
+.lc-table-row { height: var(--lc-density-row-height); }
+.lc-table-cell { padding: var(--lc-density-cell-padding); }
+.lc-numeric {
+  font-family: var(--lc-numeric-font);
+  text-align: var(--lc-numeric-align);
+}

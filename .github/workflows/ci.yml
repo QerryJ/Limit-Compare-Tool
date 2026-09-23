@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    env:
+      # GUI 用例必须无头运行，不能弹窗
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Import smoke check
+        run: python -c "import src.model, src.parsers.pds, src.parsers.cpts, src.parsers.pe_excel, src.parsers.datalog, src.engine.align, src.engine.pe_compare, src.engine.analysis; print('import ok')"
+
+  package:
+    name: package (single-file exe)
+    runs-on: windows-latest
+    needs: test
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Build exe
+        run: pyinstaller build.spec --noconfirm
+
+      - name: Verify artifact
+        shell: bash
+        run: |
+          test -f dist/LimitCompare.exe
+          echo "built: $(du -h dist/LimitCompare.exe | cut -f1)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LimitCompare-exe
+          path: dist/LimitCompare.exe

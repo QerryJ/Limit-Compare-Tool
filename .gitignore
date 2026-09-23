@@ -1,0 +1,58 @@
+# ─────────────────────────────────────────────────────────────
+#  Limit Compare —— 公开仓库，忽略规则即安全边界。
+#  任何「真实料号 / 实测数据 / 本机状态」都不允许越过此文件。
+# ─────────────────────────────────────────────────────────────
+
+# 真实素材：PE 规格 / 测试程序 / datalog，含料号与实测值，绝不入库
+Material/
+
+# 运行产出
+output/
+results/
+
+# 本机状态（含绝对路径与最近文件历史）
+config/settings.json
+config/recent.json
+
+# 料号专用名称对齐表：人工决策资产，但含产品专属命名，改为示例入库
+config/mapping_*.json
+!config/mapping.example.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 打包产物（build.spec 是构建配置，须入库）
+build/
+dist/
+*.exe
+*.spec
+!build.spec
+
+# 测试与覆盖率缓存
+.pytest_cache/
+.coverage
+htmlcov/
+
+# WorkBuddy：记忆 / 会话数据不入库，项目技能（角色定义）是资产要入库
+.workbuddy/*
+!.workbuddy/skills/
+
+# 环境与密钥（绝不入库）
+.env
+.env.*
+*.token
+*.key
+
+# Office 临时锁文件
+~$*
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
