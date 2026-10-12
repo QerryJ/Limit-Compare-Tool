@@ -78,7 +78,7 @@ MODE_COVERAGE = "FT ↔ QA 覆盖率 (FV-1)"
 MODE_CHANGE = "变更前 ↔ 后 (FV-4)"
 
 APP_AUTHOR = "Quincy"
-APP_VERSION = "0.4.4"
+APP_VERSION = "0.4.5"
 
 # 拖拽上传：按扩展名路由到对应输入字段
 _PROGRAM_EXT = (".pds", ".cpts")
@@ -112,7 +112,9 @@ _COVERAGE_HEADERS = [
     "FT LSL", "FT HSL", "QA LSL", "QA HSL", "低边裕度", "高边裕度", "判定",
 ]
 _CHANGE_HEADERS = [
-    "Function", "Test item", "Unit", "方向", "变更说明",
+    "Function", "Test item", "Unit", "温区", "侧别",
+    "旧 LSL", "旧 HSL", "新 LSL", "新 HSL", "Δ LSL", "Δ HSL",
+    "方向", "变更说明",
 ]
 
 
@@ -719,13 +721,27 @@ class MainWindow(QMainWindow):
             legend_text = ("QA 须完整包含 FT（正裕度=有余量）。● 未覆盖=QA 未包住 FT，需收紧 QA/放宽 FT　"
                            "● 整体缺失=该测试项双侧皆无　● 局部缺失=仅部分温区有数据")
         elif kind == "change" and self.result is not None:
-            rows = [
-                [d.function, d.test_item, d.unit, d.direction.value, d.change_detail]
-                for d in self.result.items
-            ]
+            # 逐 CellDiff 展开，保留旧/新 LSL/HSL 及 Δ，让用户直观看到原始数据差异
+            rows = []
+            for d in self.result.items:
+                cells = d.zones if d.zones else [None]
+                for c in cells:
+                    rows.append([
+                        d.function, d.test_item, d.unit,
+                        c.zone.value if c else "",
+                        c.side.value if c else "",
+                        fmt(c.a_lo) if c and c.a_lo is not None else "",
+                        fmt(c.a_hi) if c and c.a_hi is not None else "",
+                        fmt(c.b_lo) if c and c.b_lo is not None else "",
+                        fmt(c.b_hi) if c and c.b_hi is not None else "",
+                        fmt(c.delta_lo) if c and c.delta_lo is not None else "",
+                        fmt(c.delta_hi) if c and c.delta_hi is not None else "",
+                        d.direction.value, d.change_detail,
+                    ])
             headers = _CHANGE_HEADERS
-            verdict_col = 3
-            legend_text = ("变更方向（颜色之外必有文字）：● 放宽=限制变宽（漏放风险，优先复核）　"
+            verdict_col = 11
+            legend_text = ("变更方向（颜色之外必有文字）：旧/新 LSL·HSL 为逐温区逐侧原始 limit，"
+                           "Δ 为新−旧差值　● 放宽=限制变宽（漏放风险，优先复核）　"
                            "● 混合=一边收一边放（含放宽风险）　● 收紧=更严　● 新增/移除=项变动")
         elif kind == "update" and self.result is not None:
             rows = [
