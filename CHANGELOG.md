@@ -10,6 +10,18 @@
 - GR-7 PE 行级可追溯（结果回链到 PE 源行）
 - GR-8 配置方案的保存 / 加载
 
+## [0.4.6] - 2026-10-13
+
+### 修复（ETS88 在 GU↔FT 校验中 GU limit 无法识别）
+- **新增 `promote_qa_to_gu`**（`src/engine/coverage.py`）：ETS88 程序无独立 GU 列，其 QA limit 在
+  GU↔FT 校验（FV-5）中作为「GU 程序」载入时，由本函数视为 GU limit——仅当某温区 GU 缺失且 QA
+  存在时，把 QA 补位为 GU（复制为新 `Bound` 实例，不覆盖 CTA8290 已有的真实 GU）。
+- **接线**：`MainWindow._run_gu_vs_ft` 在载入 GU 程序后、合并前调用 `promote_qa_to_gu(gu)`，
+  仅作用于「GU 程序」，不影响 FV-1 覆盖率等其它模式（它们仍按原语义读 QA）。
+- XLSX / HTML 导出读取同一 `guft_report`，自动受益。
+- 回归测试 3 例（不依赖真实素材）：ETS88 仅 FT+QA→识别为 GU 并判定 INSIDE；
+  无 QA→仍 MISSING；CTA8290 已有真实 GU→不被覆盖。`docs/db/data-model.md` 补充 GU 枚举与约定。
+
 ## [0.4.5] - 2026-10-12
 
 ### 修复（FV-4 原始数据可见性）

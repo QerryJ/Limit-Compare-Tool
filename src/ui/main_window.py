@@ -48,7 +48,11 @@ from PySide6.QtWidgets import (
 from src.config.settings import add_recent, load_recent, load_settings, save_settings
 from src.engine.align import Aligner
 from src.engine.analysis import compute_stat, propose_gu
-from src.engine.coverage import evaluate_coverage, evaluate_gu_vs_ft
+from src.engine.coverage import (
+    evaluate_coverage,
+    evaluate_gu_vs_ft,
+    promote_qa_to_gu,
+)
 from src.engine.compare import compare_programs
 from src.engine.pe_compare import compare_pe_to_program
 from src.export.analysis_report import export_analysis
@@ -78,7 +82,7 @@ MODE_COVERAGE = "FT ↔ QA 覆盖率 (FV-1)"
 MODE_CHANGE = "变更前 ↔ 后 (FV-4)"
 
 APP_AUTHOR = "Quincy"
-APP_VERSION = "0.4.5"
+APP_VERSION = "0.4.6"
 
 # 拖拽上传：按扩展名路由到对应输入字段
 _PROGRAM_EXT = (".pds", ".cpts")
@@ -595,6 +599,8 @@ class MainWindow(QMainWindow):
             )
         ft = self._load_program(ft_path)
         gu = self._load_program(gu_path)
+        # ETS88 程序无独立 GU 列，其 QA limit 在 GU↔FT 校验中即视为 GU limit
+        gu = promote_qa_to_gu(gu)
         merged = merge_sides(ft, gu, f"{ft.id or 'FT'} + {gu.id or 'GU'}")
         zone = self._zone()
         self.guft_report = evaluate_gu_vs_ft(merged, [zone])

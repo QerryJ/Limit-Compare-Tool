@@ -15,6 +15,7 @@ from src.engine.coverage import (
     CoverageStatus,
     evaluate_coverage,
     evaluate_gu_vs_ft,
+    promote_qa_to_gu,
     GuVsFtStatus,
 )
 from src.model import (
@@ -102,6 +103,46 @@ def test_gu_must_sit_inside_ft():
     # the BAD item must call out the high-edge overrun
     bad_zone = by_name["BAD"].zones[0]
     assert "高边超FT" in bad_zone.detail
+
+
+# --------------------------------------------------------------------- O3 (ETS88 GU 来自 QA)
+def test_ets88_gu_from_qa_is_recognized():
+    # 模拟 ETS88 .pds：只有 FT + QA，无独立 GU 列
+    item = LimitItem(function="IQ", test_item="X", machine_type=MachineType.ETS88)
+    item.set_bound(TempZone.ROOM, SourceType.FT, Bound(lo=10.0, hi=30.0))
+    item.set_bound(TempZone.ROOM, SourceType.QA, Bound(lo=12.0, hi=28.0))  # QA 即 GU
+    program = ProgramModel(id="p", name="p", machine_type=MachineType.ETS88,
+                           functions=["IQ"], items=[item])
+    promote_qa_to_gu(program)
+    assert item.get_bound(TempZone.ROOM, SourceType.GU) is not None
+    report = evaluate_gu_vs_ft(program, [TempZone.ROOM])
+    assert report.items[0].status is GuVsFtStatus.INSIDE
+    assert report.summary.get(GuVsFtStatus.MISSING.value, 0) == 0
+
+
+def test_ets88_gu_promotion_skips_when_qa_missing():
+    item = LimitItem(function="IQ", test_item="X", machine_type=MachineType.ETS88)
+    item.set_bound(TempZone.ROOM, SourceType.FT, Bound(lo=10.0, hi=30.0))
+    # 无 QA -> 无可补位的 GU
+    program = ProgramModel(id="p", name="p", machine_type=MachineType.ETS88,
+                           functions=["IQ"], items=[item])
+    promote_qa_to_gu(program)
+    assert item.get_bound(TempZone.ROOM, SourceType.GU) is None
+    report = evaluate_gu_vs_ft(program, [TempZone.ROOM])
+    assert report.items[0].status is GuVsFtStatus.MISSING
+
+
+def test_ets88_gu_promotion_does_not_override_real_gu():
+    # CTA8290 已有真实 GU（_GU_ 文件），promote 不应被 QA 覆盖
+    item = LimitItem(function="IQ", test_item="X", machine_type=MachineType.CTA8290)
+    item.set_bound(TempZone.ROOM, SourceType.FT, Bound(lo=10.0, hi=30.0))
+    item.set_bound(TempZone.ROOM, SourceType.QA, Bound(lo=5.0, hi=35.0))
+    item.set_bound(TempZone.ROOM, SourceType.GU, Bound(lo=12.0, hi=28.0))
+    program = ProgramModel(id="p", name="p", machine_type=MachineType.CTA8290,
+                           functions=["IQ"], items=[item])
+    promote_qa_to_gu(program)
+    gu = item.get_bound(TempZone.ROOM, SourceType.GU)
+    assert gu.lo == 12.0 and gu.hi == 28.0  # 真实 GU 保留，未被 QA 覆盖
 
 
 # --------------------------------------------------------------------- O5

@@ -64,7 +64,7 @@
 | 枚举 | 取值 | 用途 |
 |---|---|---|
 | MachineType | ETS88 / CTA8290 | 机台 |
-| SourceType | FT / QA | 侧别 |
+| SourceType | FT / QA / GU | 侧别 |
 | TempZone | Room / Hot / Cold | 温区（当前仅用 Room） |
 | MatchStatus | exact / prefix / mapped / filename_hint / ambiguous / unmatched | 名称对齐 |
 | UpdateStatus | 无需更新 / 需更新 / 程序缺项 / 仅程序有 / PE待测未定 | FV-2 结果 |
@@ -78,6 +78,11 @@
 **方向语义（易混淆，务必按此理解）**
 - `收紧` = 目标值比当前更严（程序现比 PE 松 → **漏放风险**，必须改）
 - `放宽` = 目标值比当前更松（程序现比 PE 紧 → 过杀，可选优化）
+
+**GU 语义（侧别，务必按此理解）**
+- CTA8290 由 `_GU_` 命名的程序文件提供**真实 GU**（写入 `SourceType.GU`）。
+- ETS88 程序**无独立 GU 列**，其 QA limit 在 GU↔FT 校验（FV-5）中作为「GU 程序」载入时，由 `promote_qa_to_gu` 视为 GU limit——**仅当该温区 GU 缺失时把 QA 补位为 GU，不覆盖已有真实 GU**。
+- 该映射只发生在 GU↔FT 路径的「GU 程序」上；FV-1 覆盖率等其它模式仍按原语义读取 QA，不受影响。
 
 ---
 

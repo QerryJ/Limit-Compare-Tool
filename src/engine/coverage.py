@@ -218,3 +218,20 @@ def evaluate_gu_vs_ft(
         key = entry.status.value if entry.status else GuVsFtStatus.MISSING.value
         summary[key] = summary.get(key, 0) + 1
     return GuVsFtReport(program_id=program.id, items=items, summary=summary)
+
+
+def promote_qa_to_gu(program: ProgramModel) -> ProgramModel:
+    """ETS88 程序无独立 GU 列，其 QA limit 在 GU↔FT 校验中即视为 GU limit。
+
+    仅当某 (zone) 的 GU 缺失、且 QA 存在时才把 QA 复制为 GU；
+    已有真实 GU（如 CTA8290 的 ``_GU_`` 文件）不被覆盖。原地修改并返回 program。
+    """
+    for item in program.items:
+        for zone in list(item.bounds.keys()):
+            if item.get_bound(zone, SourceType.GU) is not None:
+                continue
+            qa = item.get_bound(zone, SourceType.QA)
+            if qa is not None:
+                # 复制为新 Bound 实例，避免与 QA 共享引用产生副作用
+                item.set_bound(zone, SourceType.GU, Bound(lo=qa.lo, hi=qa.hi))
+    return program
